@@ -1,4 +1,4 @@
-# HBM RAG Cloud
+# hbm-process-rag-platform
 
 HBM TC Bonding 공정 데이터를 웹에서 조회하고, 조건 기반 질의를 통해 관련 문서를 요약해서 확인할 수 있도록 구성한 제조 데이터 서비스 프로젝트입니다. FastAPI 백엔드, MySQL, Nginx 프론트엔드, Docker Compose, Kubernetes 매니페스트, Jenkins 파이프라인까지 함께 포함해 서비스 구현과 배포 흐름을 한 저장소에 정리했습니다.
 
