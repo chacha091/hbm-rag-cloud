@@ -1,0 +1,49 @@
+# 2) HuggingFace LLM 전용: transformers + pipeline 사용 (Open Weight LLM 실행)
+
+# 2번 서버 (예: /llm_server) Qwen 등 로컬 모델 추론 API 제공 (FastAPI)
+# -> Open Weight LLM (transformers + pipeline) 사용 코드는 별도 프로세스/가상 환경에서 분리 실행 권고
+
+# 내부 "rag_backend_full" 노드/컨테이너용 패키지 설치
+
+# pip install -U pip setuptools wheel
+# pip install -r requirements.txt
+
+# --- Web / API ---
+fastapi
+uvicorn[standard]
+pydantic>=2,<3
+python-dotenv
+httpx
+orjson
+python-multipart
+aiofiles
+
+# --- Data / Async ---
+pandas
+nest_asyncio
+
+# --- DB (Async) ---
+sqlalchemy>=2.0,<3.0
+aiomysql
+pymysql
+aiosqlite
+greenlet
+
+# --- ML Core (CVE 대응: torch>=2.6) ---
+torch>=2.6
+accelerate
+einops
+faiss-cpu
+
+# --- Hugging Face stack (transformers 4.x 고정) ---
+transformers>=4.45,<5.0
+sentence-transformers>=3.0
+huggingface-hub>=0.33,<1.0
+tokenizers>=0.22,<1.0
+safetensors>=0.4.3
+
+# --- LangChain stack (1.x 계열 통일) ---
+langchain==1.2.7
+langchain-community==0.4.1
+langchain-core>=1.2.7,<2.0
+langchain-huggingface==1.2.0

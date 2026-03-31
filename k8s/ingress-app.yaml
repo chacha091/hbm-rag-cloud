@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hbm-rag-ingress
+  namespace: class-2
+spec:
+  ingressClassName: public-nginx
+  rules:
+    - host: hbm-rag.example.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: hbm-rag-backend
+                port:
+                  number: 8002
+            path: /api
+            pathType: Prefix
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hbm-rag-frontend
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - hbm-rag.example.com
+      secretName: hbm-rag-tls-secret
+
+# 외부 접속 진입점
+# 예시 도메인으로 들어온 요청을 프론트 서비스로 넘김

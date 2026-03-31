@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HBM Forge | Manufacturing Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Literata:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-0: #f7f5f1;
+      --bg-1: #ece8e1;
+      --panel: #ffffff;
+      --panel-soft: #f4f1eb;
+      --line: #111111;
+      --line-soft: #d7d2c8;
+      --ink: #111111;
+      --muted: #666666;
+      --ok: #1f6f43;
+      --warn: #8a6200;
+      --bad: #a12b2b;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "IBM Plex Sans KR", "Malgun Gothic", sans-serif;
+      background: linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image:
+        linear-gradient(to right, rgba(17, 17, 17, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(17, 17, 17, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar {
+      border-right: 1px solid rgba(17, 17, 17, 0.12);
+      padding: 30px 20px;
+      background: rgba(255, 255, 255, 0.76);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand {
+      margin-bottom: 48px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "Literata", serif;
+      font-size: 40px;
+      letter-spacing: -0.6px;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .brand p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    .menu {
+      display: grid;
+      gap: 12px;
+    }
+
+    .menu button {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line-soft);
+      border-radius: 14px;
+      padding: 16px 14px;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: "IBM Plex Sans KR", sans-serif;
+    }
+
+    .menu button:hover {
+      border-color: var(--line);
+      background: #f2eee7;
+    }
+
+    .menu button.active {
+      border-color: var(--line);
+      background: #111111;
+      color: #ffffff;
+      box-shadow: inset 0 0 0 1px #111111;
+    }
+
+    .menu strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .menu span {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .menu button.active span {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .main {
+      padding: 28px 32px 34px;
+    }
+
+    .top {
+      border-bottom: 1px solid rgba(17, 17, 17, 0.14);
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+
+    .top h2 {
+      margin: 0;
+      font-size: 46px;
+      line-height: 1;
+      font-family: "Literata", serif;
+      letter-spacing: -0.8px;
+    }
+
+    .meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 17px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 22px;
+    }
+
+    .layout {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .panel h3 {
+      margin: 0 0 14px;
+      font-family: "Literata", serif;
+      font-size: 27px;
+      letter-spacing: -0.2px;
+      color: var(--ink);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .field { grid-column: span 12; }
+    .field.col-6 { grid-column: span 6; }
+    .field.col-4 { grid-column: span 4; }
+    .field.col-8 { grid-column: span 8; }
+    .field.col-3 { grid-column: span 3; }
+    .field.col-2 { grid-column: span 2; }
+
+    .field label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      border: 1px solid #cfc8bc;
+      background: #fffdfa;
+      color: var(--ink);
+      border-radius: 10px;
+      font-family: "IBM Plex Sans KR", sans-serif;
+      font-size: 16px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+      border-color: var(--line);
+      box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+    }
+
+    textarea {
+      min-height: 130px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    .data-row {
+      margin-top: 14px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px 10px;
+      padding: 12px;
+      font-size: 16px;
+      color: var(--muted);
+      background: var(--panel-soft);
+    }
+
+    .data-row strong {
+      color: var(--ink);
+      font-size: 18px;
+      margin-left: 6px;
+    }
+
+    .btn-row {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      border: 1px solid #111111;
+      border-radius: 10px;
+      padding: 10px 18px;
+      cursor: pointer;
+      font-family: "IBM Plex Sans KR", sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: #ffffff;
+      background: #111111;
+      box-shadow: none;
+    }
+
+    .btn.secondary {
+      background: #ffffff;
+      color: var(--ink);
+      border: 1px solid rgba(17, 17, 17, 0.18);
+    }
+
+    .btn[disabled] {
+      opacity: 0.52;
+      cursor: not-allowed;
+    }
+
+    .prediction-layout {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      align-items: start;
+    }
+
+    .score-card {
+      text-align: center;
+      padding: 18px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      background: linear-gradient(180deg, #ffffff, #f4f1eb);
+    }
+
+    .score-value {
+      margin: 0;
+      font-family: "Literata", serif;
+      font-size: 72px;
+      line-height: 0.95;
+      color: var(--ink);
+    }
+
+    .score-label {
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metrics {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric {
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fbfaf7;
+    }
+
+    .metric p {
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 1px;
+      font-size: 22px;
+      color: var(--ink);
+      font-family: "Literata", serif;
+    }
+
+    .side-card {
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .side-card h4 {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-family: "IBM Plex Sans KR", sans-serif;
+    }
+
+    .qa-item {
+      border-top: 1px solid rgba(17, 17, 17, 0.1);
+      padding: 7px 0;
+    }
+
+    .qa-item:first-of-type { border-top: 0; padding-top: 0; }
+
+    .qa-item .k {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .qa-item .v {
+      font-size: 17px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .pass-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #efefef;
+      border: 1px solid rgba(17, 17, 17, 0.14);
+      color: var(--ink);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .side-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .side-list li {
+      border-left: 2px solid #111111;
+      padding-left: 8px;
+      color: #333333;
+      font-size: 14px;
+    }
+
+    pre.code {
+      margin: 0;
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 12px;
+      background: #fcfbf8;
+      color: #1b1b1b;
+      font-size: 14px;
+      line-height: 1.42;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .status-line {
+      margin-top: 10px;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .side-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .recommend {
+      border-left: 3px solid #111111;
+      border-radius: 10px;
+      background: #f6f2eb;
+      padding: 14px;
+      font-size: 17px;
+      line-height: 1.5;
+      color: #222222;
+    }
+
+    .qa-layout {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: minmax(0, 1fr) 290px;
+      align-items: start;
+    }
+
+    .answer-box {
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 12px;
+      padding: 14px;
+      background: #ffffff;
+    }
+
+    .answer-title {
+      font-family: "IBM Plex Sans KR", sans-serif;
+      color: var(--ink);
+      font-size: 16px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .qa-panel h3 { font-size: 24px; margin-bottom: 10px; }
+    .qa-panel .form-grid { gap: 6px; }
+    .qa-panel .field label { font-size: 12px; margin-bottom: 2px; }
+    .qa-panel input[type="text"],
+    .qa-panel input[type="number"],
+    .qa-panel textarea,
+    .qa-panel select { font-size: 14px; padding: 8px 10px; }
+    .qa-panel textarea { min-height: 78px; max-height: 98px; }
+    .qa-panel .btn { font-size: 13px; padding: 8px 12px; }
+    .qa-panel .btn-row { margin-top: 8px; gap: 8px; }
+    .qa-panel .answer-box { padding: 10px; }
+    .qa-panel .answer-title { font-size: 13px; margin-bottom: 6px; }
+    .qa-panel pre.code { font-size: 13px; line-height: 1.32; padding: 9px; max-height: 135px; overflow: auto; }
+    .qa-aside h4 { font-size: 14px; margin-bottom: 8px; }
+    .qa-aside .qa-item { padding: 6px 0; }
+    .qa-aside .qa-item .k { font-size: 11px; }
+    .qa-aside .qa-item .v { font-size: 15px; }
+    .qa-aside .side-list { gap: 6px; }
+    .qa-aside .side-list li { font-size: 13px; }
+    .qa-tools {
+      border: 1px solid rgba(17, 17, 17, 0.12);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #f8f6f1;
+    }
+    .qa-tools .btn { font-size: 13px; padding: 7px 10px; }
+    .qa-tools .form-grid { gap: 6px; }
+    .qa-tools .field label { font-size: 11px; }
+    .qa-tools input[type="text"] { font-size: 13px; padding: 7px 9px; }
+    .qa-kpi {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      gap: 8px 14px;
+      flex-wrap: wrap;
+    }
+    .qa-result-grid { margin-top: 8px; }
+    .recipe-btn-wrap { display: flex; justify-content: center; margin-top: 10px; }
+    .prediction-qna { margin-top: 14px; }
+    .prediction-qna .form-grid { gap: 8px; }
+    .prediction-qna .field label { font-size: 12px; }
+    .prediction-qna input[type="text"],
+    .prediction-qna input[type="number"],
+    .prediction-qna textarea { font-size: 14px; padding: 8px 10px; }
+    .prediction-qna textarea { min-height: 78px; max-height: 98px; }
+    .prediction-qna .btn { font-size: 14px; padding: 8px 12px; }
+    .prediction-qna pre.code { font-size: 13px; max-height: 120px; }
+    .toggle-btn { margin-top: 6px; }
+
+    .status-line strong.ok { color: var(--ok); }
+    .status-line strong.warn { color: var(--warn); }
+    .status-line strong.bad { color: var(--bad); }
+
+    .hide { display: none; }
+
+    @media (max-width: 1460px) {
+      .app { grid-template-columns: 252px minmax(0, 1fr); }
+      .brand h1 { font-size: 36px; }
+      .menu strong { font-size: 18px; }
+      .menu span { font-size: 12px; }
+      .top h2 { font-size: 42px; }
+      .meta { font-size: 16px; }
+      .panel h3 { font-size: 25px; }
+      input[type="text"], input[type="number"], textarea, select { font-size: 15px; }
+      .field label { font-size: 13px; }
+      .btn { font-size: 15px; }
+      .score-value { font-size: 82px; }
+      .metric strong { font-size: 24px; }
+      pre.code { font-size: 14px; }
+      .status-line { font-size: 14px; }
+      .data-row { font-size: 15px; }
+      .data-row strong { font-size: 17px; }
+    }
+
+    @media (max-width: 1120px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+        padding: 20px;
+      }
+      .brand { margin-bottom: 22px; }
+      .brand h1 { font-size: 34px; }
+      .brand p { font-size: 14px; }
+      .menu {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .menu strong { font-size: 16px; }
+      .menu span { font-size: 12px; }
+      .main { padding: 20px; }
+      .top h2 { font-size: 36px; }
+      .prediction-layout { grid-template-columns: 1fr; }
+      .qa-layout { grid-template-columns: 1fr; }
+      .field.col-6, .field.col-4, .field.col-8, .field.col-3, .field.col-2 { grid-column: span 12; }
+    }
+
+    @media (max-width: 700px) {
+      .menu { grid-template-columns: 1fr; }
+      .top h2 { font-size: 30px; }
+      .meta { font-size: 15px; }
+      .panel { padding: 14px; }
+      .panel h3 { font-size: 22px; }
+      input[type="text"], input[type="number"], textarea, select { font-size: 15px; }
+      .btn { width: 100%; font-size: 16px; }
+      .btn-row { display: grid; }
+      .score-value { font-size: 62px; }
+      .metrics { grid-template-columns: 1fr; }
+      .data-row { grid-template-columns: 1fr; }
+      pre.code { font-size: 15px; }
+      .qa-panel textarea { min-height: 72px; max-height: 92px; }
+      .qa-panel pre.code { max-height: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>HBM FORGE</h1>
+        <p>TC Bonding Prediction V2.1</p>
+      </div>
+
+      <nav class="menu">
+        <button :class="{active: activeTab === 'recipe'}" @click="activeTab = 'recipe'">
+          <strong>Recipe Input</strong>
+          <span>Configure bonding parameters</span>
+        </button>
+        <button :class="{active: activeTab === 'prediction'}" @click="activeTab = 'prediction'">
+          <strong>AI Prediction</strong>
+          <span>Quality forecast and result</span>
+        </button>
+        <button :class="{active: activeTab === 'history'}" @click="activeTab = 'history'">
+          <strong>History</strong>
+          <span>Status, schema, index history</span>
+        </button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="top">
+        <h2>{{ pageTitle }}</h2>
+        <div class="meta">
+          <span>Equipment: {{ query.equipment_id || 'TCB-01' }}</span>
+          <span>Facility: FAB3</span>
+          <span>{{ nowText }}</span>
+        </div>
+      </header>
+
+      <section class="layout" :class="{hide: activeTab !== 'recipe'}">
+        <article class="panel">
+          <h3>PRODUCT INFORMATION</h3>
+          <div class="form-grid">
+            <div class="field col-4">
+              <label>Product Type</label>
+              <input type="text" v-model="query.product_id" placeholder="HBM3E-8L-30um" />
+            </div>
+            <div class="field col-4">
+              <label>Lot ID</label>
+              <input type="text" v-model="lotId" placeholder="LOT_20260220_01" />
+            </div>
+            <div class="field col-4">
+              <label>Layer Position</label>
+              <input type="text" v-model="query.layer_position" placeholder="Layer 5" />
+            </div>
+            <div class="field col-4">
+              <label>Input By (Engineer)</label>
+              <input type="text" v-model="engineer" placeholder="engineer_kim" />
+            </div>
+            <div class="field col-4">
+              <label>Equipment ID</label>
+              <input type="text" v-model="query.equipment_id" placeholder="EQP-12" />
+            </div>
+            <div class="field col-4">
+              <label>Index Name</label>
+              <input type="text" v-model="query.save_name" placeholder="RAG_DOCUMENT" />
+            </div>
+          </div>
+          <div class="data-row">
+            <div>HBM Generation:<strong>HBM3E</strong></div>
+            <div>Stack Layers:<strong>8 Layers</strong></div>
+            <div>Die Thickness:<strong>30 um</strong></div>
+            <div>Bonding Material:<strong>Cu-Cu</strong></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h3>TC BONDING RECIPE PARAMETERS</h3>
+          <div class="form-grid">
+            <div class="field col-4">
+              <label>Bonding Temperature (C)</label>
+              <input type="number" step="0.1" v-model.number="recipe.temperature" />
+            </div>
+            <div class="field col-4">
+              <label>Bonding Force (N)</label>
+              <input type="number" step="1" v-model.number="recipe.force" />
+            </div>
+            <div class="field col-4">
+              <label>Bonding Time (Sec)</label>
+              <input type="number" step="0.1" v-model.number="recipe.time" />
+            </div>
+            <div class="field col-4">
+              <label>Approach Speed (mm/s)</label>
+              <input type="number" step="0.1" v-model.number="recipe.speed" />
+            </div>
+            <div class="field col-4">
+              <label>Alignment Tolerance (mm)</label>
+              <input type="number" step="0.01" v-model.number="recipe.align" />
+            </div>
+            <div class="field col-4">
+              <label>Hold Time (Sec)</label>
+              <input type="number" step="0.1" v-model.number="recipe.hold" />
+            </div>
+          </div>
+          <div class="recipe-btn-wrap">
+            <button class="btn" @click="goPrediction">PREDICT QUALITY WITH AI</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="layout" :class="{hide: activeTab !== 'prediction'}">
+        <div class="prediction-layout">
+          <article class="panel">
+            <h3>AI PREDICTION RESULTS</h3>
+            <div class="score-card">
+              <p class="score-value">{{ successProbability }}%</p>
+              <div class="score-label">Success Probability</div>
+
+              <div class="metrics">
+                <div class="metric">
+                  <p>PREDICTED BLT</p>
+                  <strong>{{ predictedBLT }}</strong>
+                </div>
+                <div class="metric">
+                  <p>PREDICTED VOID</p>
+                  <strong>{{ predictedVoid }}</strong>
+                </div>
+                <div class="metric">
+                  <p>PREDICTED WARPAGE</p>
+                  <strong>{{ predictedWarpage }}</strong>
+                </div>
+                <div class="metric">
+                  <p>CONFIDENCE SCORE</p>
+                  <strong>{{ confidenceScore }}</strong>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <aside class="side-stack">
+            <div class="side-card">
+              <h4>QUALITY ASSESSMENT</h4>
+              <div class="qa-item">
+                <div class="k">Final Judgment</div>
+                <div class="v"><span class="pass-chip">{{ finalJudge }}</span></div>
+              </div>
+              <div class="qa-item">
+                <div class="k">Risk Level</div>
+                <div class="v">{{ riskLevel }}</div>
+              </div>
+              <div class="qa-item">
+                <div class="k">Model Used</div>
+                <div class="v">Qwen1.5-0.5B + RAG</div>
+              </div>
+              <div class="qa-item">
+                <div class="k">Prediction ID</div>
+                <div class="v">{{ predictionId }}</div>
+              </div>
+              <div class="qa-item">
+                <div class="k">Analysis Time</div>
+                <div class="v">{{ nowText }}</div>
+              </div>
+            </div>
+
+            <div class="side-card">
+              <h4>EXPERT KNOWLEDGE APPLIED</h4>
+              <ul class="side-list">
+                <li v-for="(src, idx) in sourceLabels" :key="'pred-src-'+idx">{{ src }}</li>
+                <li v-if="sourceLabels.length === 0">No source metadata yet.</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+
+        <article class="panel">
+          <h3>RAG QnA</h3>
+          <div class="recommend">{{ recommendationText }}</div>
+
+          <div class="prediction-qna">
+            <div class="qa-tools">
+              <div class="form-grid">
+                <div class="field col-4">
+                  <label>API Base URL</label>
+                  <input type="text" v-model="baseUrl" placeholder="/api" />
+                </div>
+                <div class="field col-3">
+                  <label>Ingest Table</label>
+                  <input type="text" v-model="ingest.table" placeholder="RAG_DOCUMENT" />
+                </div>
+                <div class="field col-3">
+                  <label>Ingest Save Name</label>
+                  <input type="text" v-model="ingest.save_name" placeholder="RAG_DOCUMENT" />
+                </div>
+              </div>
+              <div class="btn-row" style="margin-top:6px;">
+                <button class="btn secondary" @click="checkHealth" :disabled="loading.health">Health</button>
+                <button class="btn secondary" @click="getStatus" :disabled="loading.status">Status</button>
+                <button class="btn secondary" @click="getSchema" :disabled="loading.schema">Schema</button>
+                <button class="btn secondary" @click="getDbTables" :disabled="loading.tables">DB Tables</button>
+                <button class="btn secondary" @click="postIngest" :disabled="loading.ingest">Ingest</button>
+              </div>
+              <div class="qa-kpi">
+                <span>Health: {{ health.ok ? 'OK' : 'DOWN' }}</span>
+                <span v-if="health.latency">Latency: {{ health.latency }} ms</span>
+                <span>Indices: {{ status.data?.faiss_indices?.length || 0 }}</span>
+                <span>Cache: {{ status.data?.cache_keys?.length || 0 }}</span>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field col-8">
+                <label>Question to LLM</label>
+                <textarea v-model="query.question" placeholder="Provide concise process recommendation for this product/layer/equipment setup."></textarea>
+              </div>
+              <div class="field col-2">
+                <label>Top K</label>
+                <input type="number" min="1" max="50" v-model.number="query.top_k" />
+              </div>
+              <div class="field col-2">
+                <label>Margin</label>
+                <input type="number" step="0.01" v-model.number="query.margin" />
+              </div>
+              <div class="field col-12">
+                <div class="btn-row">
+                  <button class="btn" @click="postQuery" :disabled="loading.query">Run Query</button>
+                  <button class="btn secondary" @click="copyAnswer" :disabled="!query.result?.answer">Copy Answer</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid qa-result-grid">
+              <div class="field col-6 answer-box">
+                <div class="answer-title">Answer</div>
+                <pre class="code">{{ query.result?.answer || 'No answer yet.' }}</pre>
+              </div>
+              <div class="field col-6 answer-box">
+                <div class="answer-title">Backend Snapshot</div>
+                <button class="btn secondary toggle-btn" @click="showBackendSnapshot = !showBackendSnapshot">
+                  {{ showBackendSnapshot ? 'Hide Snapshot' : 'Show Snapshot' }}
+                </button>
+                <pre class="code" v-if="showBackendSnapshot">{{ pretty(backendSnapshot) }}</pre>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="layout" :class="{hide: activeTab !== 'history'}">
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp, reactive } = Vue;
+
+    createApp({
+      data() {
+        return {
+          activeTab: "recipe",
+          nowText: new Date().toLocaleString("ko-KR"),
+          lotId: "LOT_20260220_01",
+          engineer: "engineer_kim",
+          baseUrl: localStorage.getItem("rag_base_url") || "/api",
+          predictionSeed: String(Date.now()).slice(-10),
+          loading: reactive({ health: false, status: false, schema: false, tables: false, ingest: false, query: false }),
+          health: reactive({ ok: false, latency: null, data: null }),
+          status: reactive({ data: null }),
+          schemaPanel: null,
+          ingest: reactive({ table: "RAG_DOCUMENT", save_name: "RAG_DOCUMENT", result: null }),
+          showBackendSnapshot: false,
+          recipe: reactive({ temperature: 280.0, force: 450, time: 15.0, speed: 300.0, align: 0.5, hold: 3.0 }),
+          query: reactive({
+            save_name: "RAG_DOCUMENT",
+            question: "PROD_HBM3E_8L_30 제품의 layer 5에서 Void 4.10%를 낮추기 위한 공정 조치사항을 2~3문장으로 요약해줘.",
+            product_id: "PROD_HBM3E_8L_30",
+            layer_position: "5",
+            equipment_id: "TCB-01",
+            top_k: 5,
+            margin: 0.12,
+            result: null
+          })
+        };
+      },
+      watch: {
+        baseUrl(v) { localStorage.setItem("rag_base_url", v); }
+      },
+      computed: {
+        pageTitle() {
+          if (this.activeTab === "prediction") return "AI Prediction Results";
+          if (this.activeTab === "history") return "History";
+          return "Recipe Input";
+        },
+        successProbability() {
+          const q = this.query.result || {};
+          const n = Number(q.score ?? q.success_rate ?? q.success_probability);
+          if (Number.isFinite(n)) return n > 1 ? n.toFixed(1) : (n * 100).toFixed(1);
+          return "68.0";
+        },
+        predictedBLT() {
+          const v = this.query.result?.predicted_blt;
+          if (v === undefined || v === null || v === "") return "3.70 um";
+          return typeof v === "number" ? `${v} um` : String(v);
+        },
+        predictedVoid() {
+          const v = this.query.result?.predicted_void;
+          if (v === undefined || v === null || v === "") return "4.10%";
+          return typeof v === "number" ? `${v}%` : String(v);
+        },
+        predictedWarpage() {
+          const v = this.query.result?.predicted_warpage;
+          if (v === undefined || v === null || v === "") return "6.20 um";
+          return typeof v === "number" ? `${v} um` : String(v);
+        },
+        confidenceScore() {
+          const v = this.query.result?.confidence_score;
+          if (v === undefined || v === null || v === "") return "93.3%";
+          return typeof v === "number" ? `${v}%` : String(v);
+        },
+        finalJudge() {
+          if (!this.query.result) return "PENDING";
+          return this.query.result.error ? "FAIL" : "PASS";
+        },
+        riskLevel() {
+          if (!this.query.result) return "LOW";
+          return this.query.result.error ? "HIGH" : "LOW";
+        },
+        predictionId() {
+          return this.query.result?.prediction_id || this.query.result?.pred_id || `PRED-${this.predictionSeed}`;
+        },
+        sourceLabels() {
+          const list = this.query.result?.sources || [];
+          return list.map((s, i) => {
+            const marker = s.marker || `SRC_${String(i + 1).padStart(3, "0")}`;
+            const title = s.title || s.id || "Retrieved context";
+            return `${marker} - ${title}`;
+          });
+        },
+        backendSnapshot() {
+          return {
+            health: this.health.data || { ok: this.health.ok },
+            status: this.status.data || null,
+            schema_or_tables: this.schemaPanel || null,
+            ingest: this.ingest.result || null
+          };
+        },
+        recommendationText() {
+          if (!this.query.result) {
+            return "Temperature and force settings are ready. Run query for final process recommendation.";
+          }
+          if (this.query.result.error) {
+            return "Prediction query failed. Validate index state and query conditions before process execution.";
+          }
+          return this.query.result.answer || "Recommendation generated.";
+        }
+      },
+      methods: {
+        pretty(o) { return typeof o === "string" ? o : JSON.stringify(o, null, 2); },
+        async _get(path) {
+          const t0 = performance.now();
+          const res = await fetch(`${this.baseUrl}${path}`);
+          const latency = Math.round(performance.now() - t0);
+          if (!res.ok) {
+            const msg = await res.text().catch(() => res.statusText);
+            throw new Error(`${res.status} ${res.statusText} :: ${msg}`);
+          }
+          return { data: await res.json(), latency };
+        },
+        async _post(path, body) {
+          const res = await fetch(`${this.baseUrl}${path}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) {
+            const msg = await res.text().catch(() => res.statusText);
+            throw new Error(`${res.status} ${res.statusText} :: ${msg}`);
+          }
+          return await res.json();
+        },
+        async checkHealth() {
+          this.loading.health = true;
+          try {
+            const { data, latency } = await this._get("/health");
+            this.health.ok = data?.ok ?? true;
+            this.health.latency = latency;
+            this.health.data = data;
+          } catch (e) {
+            this.health.ok = false;
+            this.health.data = { error: e.message };
+          } finally {
+            this.loading.health = false;
+          }
+        },
+        async getStatus() {
+          this.loading.status = true;
+          try {
+            const { data } = await this._get("/status");
+            this.status.data = data;
+          } catch (e) {
+            this.status.data = { error: e.message };
+          } finally {
+            this.loading.status = false;
+          }
+        },
+        async getSchema() {
+          this.loading.schema = true;
+          try {
+            const { data } = await this._get("/schema/preview");
+            this.schemaPanel = data;
+          } catch (e) {
+            this.schemaPanel = { error: e.message };
+          } finally {
+            this.loading.schema = false;
+          }
+        },
+        async getDbTables() {
+          this.loading.tables = true;
+          try {
+            const { data } = await this._get("/db-tables");
+            this.schemaPanel = data;
+          } catch (e) {
+            this.schemaPanel = { error: e.message };
+          } finally {
+            this.loading.tables = false;
+          }
+        },
+        async postIngest() {
+          this.loading.ingest = true;
+          this.ingest.result = null;
+          const payload = {
+            table: this.ingest.table || "RAG_DOCUMENT",
+            save_name: this.ingest.save_name || "RAG_DOCUMENT"
+          };
+          try {
+            this.ingest.result = await this._post("/ingest", payload);
+            this.query.save_name = payload.save_name;
+            await this.getStatus();
+          } catch (e) {
+            this.ingest.result = { error: e.message, payload };
+          } finally {
+            this.loading.ingest = false;
+          }
+        },
+        async postQuery() {
+          this.loading.query = true;
+          this.query.result = null;
+          const payload = {
+            save_name: this.query.save_name || "RAG_DOCUMENT",
+            question: this.query.question || "",
+            product_id: this.query.product_id || null,
+            layer_position: this.query.layer_position || null,
+            equipment_id: this.query.equipment_id || null
+          };
+          try {
+            this.query.result = await this._post("/query", payload);
+            this.activeTab = "prediction";
+          } catch (e) {
+            this.query.result = { error: e.message, payload };
+            this.activeTab = "prediction";
+          } finally {
+            this.loading.query = false;
+          }
+        },
+        goPrediction() {
+          this.activeTab = "prediction";
+        },
+        async copyAnswer() {
+          if (!this.query.result?.answer) return;
+          try {
+            await navigator.clipboard.writeText(this.query.result.answer);
+            alert("Answer copied to clipboard.");
+          } catch (_) {
+          }
+        },
+        refreshClock() {
+          this.nowText = new Date().toLocaleString("ko-KR");
+        }
+      },
+      mounted() {
+        this.checkHealth().then(() => this.getStatus());
+        this._clock = setInterval(this.refreshClock, 1000);
+      },
+      beforeUnmount() {
+        clearInterval(this._clock);
+      }
+    }).mount("#app");
+  </script>
+</body>
+<!--
+#### Practice code for local development.
+python -m http.server 5174
+# Open http://localhost:5174/index.html
+-->
+</html>

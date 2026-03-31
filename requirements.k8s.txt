@@ -1,0 +1,15 @@
+# Lightweight requirements for Kubernetes deployment.
+# The original heavyweight dependencies remain in requirements.txt.
+
+fastapi
+uvicorn[standard]
+pydantic>=2,<3
+python-dotenv
+httpx
+orjson
+python-multipart
+aiofiles
+sqlalchemy>=2.0,<3.0
+aiomysql
+pymysql
+greenlet

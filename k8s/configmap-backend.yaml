@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hbm-rag-backend-config
+  namespace: class-2
+data:
+  DB_HOST: "hbm-rag-mysql"
+  DB_PORT: "3306"
+  DB_NAME: "tc_bonding_prediction"
+  FAISS_ROOT: "/app/faiss_db"

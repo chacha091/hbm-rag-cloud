@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hbm-rag-backend
+  namespace: class-2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hbm-rag-backend
+  template:
+    metadata:
+      labels:
+        app: hbm-rag-backend
+    spec:
+      containers:
+        - name: backend
+          image: your-registry/hbm-rag-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8002
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          envFrom:
+            - configMapRef:
+                name: hbm-rag-backend-config
+            - secretRef:
+                name: hbm-rag-backend-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+# FastAPI backend를 실제 Pod로 띄움

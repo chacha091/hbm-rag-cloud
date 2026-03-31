@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hbm-rag-backend
+  namespace: class-2
+spec:
+  selector:
+    app: hbm-rag-backend
+  ports:
+    - name: http
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP
+
+# 백엔드 Pod를 클러스터 내부에서 안정적인 이름인 backend로 접근 가능하게 함
+# 프론트 nginx가 이 서비스명을 통해 백엔드로 프록시함

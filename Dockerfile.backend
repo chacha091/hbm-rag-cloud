@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/app/.cache/huggingface \
+    FAISS_ROOT=/app/faiss_db
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Original heavyweight install path kept for reference:
+# COPY requirements.txt ./
+# RUN pip install --upgrade pip && pip install -r requirements.txt
+COPY requirements.k8s.txt ./
+RUN pip install --upgrade pip && pip install -r requirements.k8s.txt
+
+# Original backend entrypoint kept in the repository:
+# COPY rag_backend_full.py ./
+COPY backend_api.py ./
+COPY hbm_erd_ddl.sql ./
+
+EXPOSE 8002
+
+# Original command kept for reference:
+# CMD ["python", "rag_backend_full.py"]
+CMD ["python", "backend_api.py"]
