@@ -8,7 +8,7 @@ pipeline {
         BACKEND_IMAGE_NAME = 'sk057-backend'
         FRONTEND_IMAGE_NAME = 'sk057-frontend'
 
-        K8S_NAMESPACE = 'skala3-ai2'
+        K8S_NAMESPACE = 'class-2'
 
         HARBOR_CREDENTIALS = 'harbor-robot-skala26a-ai2'
         AWS_CREDENTIALS = 'aws-access-key-cred'
