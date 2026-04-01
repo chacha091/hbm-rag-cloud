@@ -41,7 +41,8 @@ jobs:
 
       - name: Log in to Harbor
         run: |
-          echo "${HARBOR_PASSWORD}" | docker login ${HARBOR_REGISTRY} -u "${HARBOR_USERNAME}" --password-stdin
+          echo '${{ secrets.HARBOR_PASSWORD }}' | docker login '${{ secrets.HARBOR_REGISTRY }}' -u '${{ secrets.HARBOR_USERNAME }}' --password-stdin
+
 
       - name: Build backend image
         run: |
