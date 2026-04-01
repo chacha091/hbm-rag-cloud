@@ -23,6 +23,12 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Check secret presence
+        run: |
+          [ -n "${{ secrets.HARBOR_REGISTRY }}" ] && echo "HARBOR_REGISTRY exists" || echo "HARBOR_REGISTRY missing"
+          [ -n "${{ secrets.HARBOR_USERNAME }}" ] && echo "HARBOR_USERNAME exists" || echo "HARBOR_USERNAME missing"
+          [ -n "${{ secrets.AWS_REGION }}" ] && echo "AWS_REGION exists" || echo "AWS_REGION missing"
+
       - name: Set image metadata
         run: |
           SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
