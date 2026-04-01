@@ -17,4 +17,4 @@ resources:
 configMapGenerator:
   - name: hbm-rag-mysql-init
     files:
-      - hbm_erd_ddl.sql=../../data/hbm_erd_ddl.sql
+      - hbm_erd_ddl.sql=files/hbm_erd_ddl.sql
