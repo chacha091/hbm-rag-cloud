@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hbm-rag-frontend
+  name: sk057-frontend
   namespace: class-2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hbm-rag-frontend
+      app: sk057-frontend
   template:
     metadata:
       labels:
-        app: hbm-rag-frontend
+        app: sk057-frontend
     spec:
       containers:
         - name: frontend
-          image: your-registry/hbm-rag-frontend:latest
+          image: amdp-registry.skala-ai.com/skala26a-ai2/sk057-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

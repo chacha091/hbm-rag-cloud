@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hbm-rag-backend
+  name: sk057-backend
   namespace: class-2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hbm-rag-backend
+      app: sk057-backend
   template:
     metadata:
       labels:
-        app: hbm-rag-backend
+        app: sk057-backend
     spec:
       containers:
         - name: backend
-          image: your-registry/hbm-rag-backend:latest
+          image: amdp-registry.skala-ai.com/skala26a-ai2/sk057-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8002
@@ -28,9 +28,9 @@ spec:
               memory: 1Gi
           envFrom:
             - configMapRef:
-                name: hbm-rag-backend-config
+                name: sk057-backend-config
             - secretRef:
-                name: hbm-rag-backend-secret
+                name: sk057-backend-secret
           readinessProbe:
             httpGet:
               path: /health

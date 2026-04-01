@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: hbm-rag-backend
+  name: sk057-backend
   namespace: class-2
 spec:
   selector:
-    app: hbm-rag-backend
+    app: sk057-backend
   ports:
     - name: http
       port: 8002

@@ -11,7 +11,7 @@ spec:
         paths:
           - backend:
               service:
-                name: hbm-rag-backend
+                name: sk057-backend
                 port:
                   number: 8002
             path: /api
@@ -20,7 +20,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: hbm-rag-frontend
+                name: sk057-frontend
                 port:
                   number: 80
   tls:

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: hbm-rag-backend-config
+  name: sk057-backend-config
   namespace: class-2
 data:
   DB_HOST: "hbm-rag-mysql"

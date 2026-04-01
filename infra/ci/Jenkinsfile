@@ -2,15 +2,24 @@ pipeline {
     agent any
 
     environment {
-        REGISTRY_HOST = 'registry.example.com'
-        REGISTRY_PROJECT = 'manufacturing-platform'
-        BACKEND_IMAGE = 'hbm-rag-backend'
-        FRONTEND_IMAGE = 'hbm-rag-frontend'
-        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        REGISTRY_HOST = 'amdp-registry.skala-ai.com'
+        REGISTRY_PROJECT = 'skala26a-ai2'
+
+        BACKEND_IMAGE_NAME = 'sk057-backend'
+        FRONTEND_IMAGE_NAME = 'sk057-frontend'
+
+        K8S_NAMESPACE = 'skala3-ai2'
+
+        HARBOR_CREDENTIALS = 'harbor-robot-skala26a-ai2'
+        AWS_CREDENTIALS = 'aws-access-key-cred'
+        AWS_REGION = 'ap-northeast-2'
+        EKS_CLUSTER_NAME = 'skala-2025'
     }
 
     options {
         timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '20'))
     }
 
     stages {
@@ -20,15 +29,32 @@ pipeline {
             }
         }
 
+        stage('Set Image Tag') {
+            steps {
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    env.IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT_SHORT}"
+
+                    env.BACKEND_IMAGE = "${REGISTRY_HOST}/${REGISTRY_PROJECT}/${BACKEND_IMAGE_NAME}:${IMAGE_TAG}"
+                    env.FRONTEND_IMAGE = "${REGISTRY_HOST}/${REGISTRY_PROJECT}/${FRONTEND_IMAGE_NAME}:${IMAGE_TAG}"
+
+                    env.BACKEND_IMAGE_LATEST = "${REGISTRY_HOST}/${REGISTRY_PROJECT}/${BACKEND_IMAGE_NAME}:latest"
+                    env.FRONTEND_IMAGE_LATEST = "${REGISTRY_HOST}/${REGISTRY_PROJECT}/${FRONTEND_IMAGE_NAME}:latest"
+                }
+            }
+        }
+
         stage('Code Build') {
             steps {
                 sh '''
                     if command -v python3 >/dev/null 2>&1; then
-                        python3 --version
-                        python3 -m py_compile backend/backend_api.py backend/rag_backend_full.py
+                        python3 -m py_compile backend_api.py rag_backend_full.py
                     elif command -v python >/dev/null 2>&1; then
-                        python --version
-                        python -m py_compile backend/backend_api.py backend/rag_backend_full.py
+                        python -m py_compile backend_api.py rag_backend_full.py
                     else
                         echo "Python is not installed on this Jenkins agent."
                         exit 1
@@ -40,33 +66,55 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
-                    docker --version
-                    docker build -t $REGISTRY_HOST/$REGISTRY_PROJECT/$BACKEND_IMAGE:$IMAGE_TAG -f backend/Dockerfile .
-                    docker build -t $REGISTRY_HOST/$REGISTRY_PROJECT/$BACKEND_IMAGE:latest -f backend/Dockerfile .
-
-                    docker build -t $REGISTRY_HOST/$REGISTRY_PROJECT/$FRONTEND_IMAGE:$IMAGE_TAG -f frontend/Dockerfile .
-                    docker build -t $REGISTRY_HOST/$REGISTRY_PROJECT/$FRONTEND_IMAGE:latest -f frontend/Dockerfile .
+                    docker build -t ${BACKEND_IMAGE} -t ${BACKEND_IMAGE_LATEST} -f Dockerfile.backend .
+                    docker build -t ${FRONTEND_IMAGE} -t ${FRONTEND_IMAGE_LATEST} -f Dockerfile.frontend .
                 '''
             }
         }
 
-        stage('Push To Registry') {
+        stage('Push Image to Harbor') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'container-registry-credentials',
-                    usernameVariable: 'REGISTRY_USERNAME',
-                    passwordVariable: 'REGISTRY_PASSWORD'
+                    credentialsId: "${HARBOR_CREDENTIALS}",
+                    usernameVariable: 'HARBOR_USER',
+                    passwordVariable: 'HARBOR_PASS'
                 )]) {
                     sh '''
-                        echo "$REGISTRY_PASSWORD" | docker login $REGISTRY_HOST -u "$REGISTRY_USERNAME" --password-stdin
+                        echo "${HARBOR_PASS}" | docker login ${REGISTRY_HOST} -u "${HARBOR_USER}" --password-stdin
+                        docker push ${BACKEND_IMAGE}
+                        docker push ${BACKEND_IMAGE_LATEST}
+                        docker push ${FRONTEND_IMAGE}
+                        docker push ${FRONTEND_IMAGE_LATEST}
+                        docker logout ${REGISTRY_HOST}
+                    '''
+                }
+            }
+        }
 
-                        docker push $REGISTRY_HOST/$REGISTRY_PROJECT/$BACKEND_IMAGE:$IMAGE_TAG
-                        docker push $REGISTRY_HOST/$REGISTRY_PROJECT/$BACKEND_IMAGE:latest
+        stage('Deploy to EKS') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "${AWS_CREDENTIALS}",
+                    usernameVariable: 'AWS_ACCESS_KEY_ID',
+                    passwordVariable: 'AWS_SECRET_ACCESS_KEY'
+                )]) {
+                    sh '''
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        export AWS_DEFAULT_REGION=${AWS_REGION}
 
-                        docker push $REGISTRY_HOST/$REGISTRY_PROJECT/$FRONTEND_IMAGE:$IMAGE_TAG
-                        docker push $REGISTRY_HOST/$REGISTRY_PROJECT/$FRONTEND_IMAGE:latest
+                        aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
 
-                        docker logout $REGISTRY_HOST
+                        kubectl -n ${K8S_NAMESPACE} set image deployment/sk057-backend \
+                          backend=${BACKEND_IMAGE}
+
+                        kubectl -n ${K8S_NAMESPACE} set image deployment/sk057-frontend \
+                          frontend=${FRONTEND_IMAGE}
+
+                        kubectl -n ${K8S_NAMESPACE} rollout status deployment/sk057-backend --timeout=300s
+                        kubectl -n ${K8S_NAMESPACE} rollout status deployment/sk057-frontend --timeout=300s
+
+                        kubectl get pods -n ${K8S_NAMESPACE}
                     '''
                 }
             }
@@ -75,19 +123,13 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completed successfully."
+            echo "CI/CD pipeline succeeded."
         }
         failure {
-            echo "Pipeline failed. Check the Jenkins console output."
+            echo "CI/CD pipeline failed."
         }
         always {
-            sh '''
-                if command -v docker >/dev/null 2>&1; then
-                    docker images | grep -E "hbm-rag-(backend|frontend)" || true
-                else
-                    echo "Docker is not installed on this Jenkins agent."
-                fi
-            '''
+            sh 'docker image prune -f || true'
         }
     }
 }
