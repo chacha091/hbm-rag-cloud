@@ -22,7 +22,7 @@ RUN pip install --upgrade pip && pip install -r requirements.k8s.txt
 # Original backend entrypoint kept in the repository:
 # COPY backend/rag_backend_full.py ./rag_backend_full.py
 COPY backend/backend_api.py ./backend_api.py
-COPY data/hbm_erd_ddl.sql ./hbm_erd_ddl.sql
+COPY infra/k8s/files/hbm_erd_ddl.sql ./hbm_erd_ddl.sql
 
 EXPOSE 8002
 
